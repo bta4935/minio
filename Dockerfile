@@ -1,12 +1,7 @@
-FROM minio/minio:latest
+FROM docker.io/minio/minio:latest
 
-RUN chmod -R 777 /usr/bin
+ENV MINIO_ROOT_USER=Bakintolaminio
+ENV MINIO_ROOT_PASSWORD=Bakin493541minio
 
-COPY ./minio /usr/bin/minio
-COPY dockerscripts/docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["/usr/bin/docker-entrypoint.sh"]
-
-VOLUME ["/data"]
-
-CMD ["minio"]
+EXPOSE 9000
+CMD ["server", "--address", ":9000", "/data"]
