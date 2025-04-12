@@ -8,15 +8,10 @@ if [ -z "$MINIO_SERVER_URL" ]; then
   export MINIO_SERVER_URL="https://minio-ciok.onrender.com"
 fi
 
-# Force MinIO to use the same port for both API and Console
-export MINIO_ADDRESS=":$PORT"
-export MINIO_CONSOLE_ADDRESS=":$PORT"
+# Unlike older versions, newer MinIO requires different ports for API and console
+# Using command-line arguments instead of environment variables for flexibility
+echo "Starting MinIO with port $PORT"
 
-# Print configuration for debugging
-echo "Starting MinIO with:"
-echo "MINIO_SERVER_URL: $MINIO_SERVER_URL"
-echo "MINIO_ADDRESS: $MINIO_ADDRESS"
-echo "MINIO_CONSOLE_ADDRESS: $MINIO_CONSOLE_ADDRESS"
-
-# Start MinIO server
-exec minio server /data
+# Run the server with command line arguments
+# API on the assigned PORT and console on internal port
+exec minio server /data --address ":$PORT" --console-address ":9001"
