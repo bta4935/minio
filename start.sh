@@ -1,17 +1,12 @@
 #!/bin/sh
 
-# Set environment variables needed for proper Render deployment
+# Use simpler configuration for Render
 export MINIO_BROWSER=on
 
-# Ensure MINIO_SERVER_URL is set
-if [ -z "$MINIO_SERVER_URL" ]; then
-  export MINIO_SERVER_URL="https://minio-ciok.onrender.com"
-fi
+# Print connection info for debugging
+echo "Current PORT: $PORT"
+echo "MINIO_SERVER_URL: $MINIO_SERVER_URL"
 
-# Unlike older versions, newer MinIO requires different ports for API and console
-# Using command-line arguments instead of environment variables for flexibility
-echo "Starting MinIO with port $PORT"
-
-# Run the server with command line arguments
-# API on the assigned PORT and console on internal port
-exec minio server /data --address ":$PORT" --console-address ":9001"
+# Run MinIO with just the bare minimum options
+# Use the port that Render expects and let MinIO figure out the rest
+exec minio server --address ":$PORT" /data
