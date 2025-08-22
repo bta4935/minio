@@ -50,8 +50,13 @@ const (
 	updateTimeout     = 10 * time.Second
 )
 
-// For windows our files have .exe additionally.
-var minioReleaseWindowsInfoURL = MinioReleaseURL + "minio.exe.sha256sum"
+var (
+	// Newer official download info URLs appear earlier below.
+	minioReleaseInfoURL = MinioReleaseURL + "minio.sha256sum"
+
+	// For windows our files have .exe additionally.
+	minioReleaseWindowsInfoURL = MinioReleaseURL + "minio.exe.sha256sum"
+)
 
 // minioVersionToReleaseTime - parses a standard official release
 // MinIO version string.
@@ -445,10 +450,10 @@ func getLatestReleaseTime(u *url.URL, timeout time.Duration, mode string) (sha25
 
 const (
 	// Kubernetes deployment doc link.
-	kubernetesDeploymentDoc = "https://min.io/docs/minio/kubernetes/upstream/index.html#quickstart-for-kubernetes"
+	kubernetesDeploymentDoc = "https://docs.min.io/community/minio-object-store/operations/deployments/kubernetes.html"
 
 	// Mesos deployment doc link.
-	mesosDeploymentDoc = "https://min.io/docs/minio/kubernetes/upstream/index.html#quickstart-for-kubernetes"
+	mesosDeploymentDoc = "https://docs.min.io/community/minio-object-store/operations/deployments/kubernetes.html"
 )
 
 func getDownloadURL(releaseTag string) (downloadURL string) {

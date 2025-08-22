@@ -675,7 +675,7 @@ func (s *storageRESTServer) DeleteVersionsHandler(w http.ResponseWriter, r *http
 	versions := make([]FileInfoVersions, totalVersions)
 	decoder := msgpNewReader(r.Body)
 	defer readMsgpReaderPoolPut(decoder)
-	for i := 0; i < totalVersions; i++ {
+	for i := range totalVersions {
 		dst := &versions[i]
 		if err := dst.DecodeMsg(decoder); err != nil {
 			s.writeErrorResponse(w, err)
@@ -728,7 +728,7 @@ func (s *storageRESTServer) RenamePartHandler(p *RenamePartHandlerParams) (grid.
 	if !s.checkID(p.DiskID) {
 		return grid.NewNPErr(errDiskNotFound)
 	}
-	return grid.NewNPErr(s.getStorage().RenamePart(context.Background(), p.SrcVolume, p.SrcFilePath, p.DstVolume, p.DstFilePath, p.Meta))
+	return grid.NewNPErr(s.getStorage().RenamePart(context.Background(), p.SrcVolume, p.SrcFilePath, p.DstVolume, p.DstFilePath, p.Meta, p.SkipParent))
 }
 
 // CleanAbandonedDataHandler - Clean unused data directories.
@@ -1156,7 +1156,7 @@ func checkDiskFatalErrs(errs []error) error {
 	}
 
 	if countErrs(errs, errFileAccessDenied) == len(errs) {
-		return errDiskAccessDenied
+		return errFileAccessDenied
 	}
 
 	if countErrs(errs, errDiskNotDir) == len(errs) {

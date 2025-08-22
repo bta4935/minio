@@ -504,7 +504,7 @@ func (er erasureObjects) deleteIfDangling(ctx context.Context, bucket, object st
 
 	// count the number of offline disks
 	offline := 0
-	for i := 0; i < len(errs); i++ {
+	for i := range len(errs) {
 		var found bool
 		switch {
 		case errors.Is(errs[i], errDiskNotFound):
@@ -826,6 +826,13 @@ func (er erasureObjects) getObjectFileInfo(ctx context.Context, bucket, object s
 		minDisks = er.setDriveCount - p
 	} else {
 		minDisks = er.setDriveCount - er.defaultParityCount
+	}
+
+	if minDisks == er.setDriveCount/2 {
+		// when data and parity are same we must atleast
+		// wait for response from 1 extra drive to avoid
+		// split-brain.
+		minDisks++
 	}
 
 	calcQuorum := func(metaArr []FileInfo, errs []error) (FileInfo, []FileInfo, []StorageAPI, time.Time, string, error) {
@@ -1221,7 +1228,7 @@ func (er erasureObjects) putMetacacheObject(ctx context.Context, key string, r *
 		partsMetadata[index].SetInlineData()
 	}
 
-	for i := 0; i < len(onlineDisks); i++ {
+	for i := range len(onlineDisks) {
 		if onlineDisks[i] != nil && onlineDisks[i].IsOnline() {
 			// Object info is the same in all disks, so we can pick
 			// the first meta from online disk
@@ -1470,7 +1477,17 @@ func (er erasureObjects) putObject(ctx context.Context, bucket string, object st
 			actualSize = n
 		}
 	}
-	if fi.Checksum == nil {
+	// If ServerSideChecksum is wanted for this object, it takes precedence
+	// over opts.WantChecksum.
+	if opts.WantServerSideChecksumType.IsSet() {
+		serverSideChecksum := r.RawServerSideChecksumResult()
+		if serverSideChecksum != nil {
+			fi.Checksum = serverSideChecksum.AppendTo(nil, nil)
+			if opts.EncryptFn != nil {
+				fi.Checksum = opts.EncryptFn("object-checksum", fi.Checksum)
+			}
+		}
+	} else if fi.Checksum == nil && opts.WantChecksum != nil {
 		// Trailing headers checksums should now be filled.
 		fi.Checksum = opts.WantChecksum.AppendTo(nil, nil)
 		if opts.EncryptFn != nil {
@@ -1557,7 +1574,7 @@ func (er erasureObjects) putObject(ctx context.Context, bucket string, object st
 		return ObjectInfo{}, toObjectErr(err, bucket, object)
 	}
 
-	for i := 0; i < len(onlineDisks); i++ {
+	for i := range len(onlineDisks) {
 		if onlineDisks[i] != nil && onlineDisks[i].IsOnline() {
 			// Object info is the same in all disks, so we can pick
 			// the first meta from online disk
@@ -1574,7 +1591,7 @@ func (er erasureObjects) putObject(ctx context.Context, bucket string, object st
 		if len(versions) == 0 {
 			// Whether a disk was initially or becomes offline
 			// during this upload, send it to the MRF list.
-			for i := 0; i < len(onlineDisks); i++ {
+			for i := range len(onlineDisks) {
 				if onlineDisks[i] != nil && onlineDisks[i].IsOnline() {
 					continue
 				}

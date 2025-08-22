@@ -1089,6 +1089,14 @@ func (api objectAPIHandlers) PostPolicyBucketHandler(w http.ResponseWriter, r *h
 		break
 	}
 
+	// check if have a file
+	if reader == nil {
+		apiErr := errorCodes.ToAPIErr(ErrMalformedPOSTRequest)
+		apiErr.Description = fmt.Sprintf("%s (%v)", apiErr.Description, errors.New("The file or text content is missing"))
+		writeErrorResponse(ctx, w, apiErr, r.URL)
+		return
+	}
+
 	if keyName, ok := formValues["Key"]; !ok {
 		apiErr := errorCodes.ToAPIErr(ErrMalformedPOSTRequest)
 		apiErr.Description = fmt.Sprintf("%s (%v)", apiErr.Description, errors.New("The name of the uploaded key is missing"))
@@ -1653,9 +1661,11 @@ func (api objectAPIHandlers) HeadBucketHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	if s3Error := checkRequestAuthType(ctx, r, policy.ListBucketAction, bucket, ""); s3Error != ErrNone {
-		writeErrorResponseHeadersOnly(w, errorCodes.ToAPIErr(s3Error))
-		return
+	if s3Error := checkRequestAuthType(ctx, r, policy.HeadBucketAction, bucket, ""); s3Error != ErrNone {
+		if s3Error := checkRequestAuthType(ctx, r, policy.ListBucketAction, bucket, ""); s3Error != ErrNone {
+			writeErrorResponseHeadersOnly(w, errorCodes.ToAPIErr(s3Error))
+			return
+		}
 	}
 
 	getBucketInfo := objectAPI.GetBucketInfo

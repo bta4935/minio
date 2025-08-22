@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 MinIO, Inc.
+// Copyright (c) 2015-2022 MinIO, Inc.
 //
 // This file is part of MinIO Object Storage stack
 //
@@ -15,11 +15,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//go:build fips && linux && amd64
-// +build fips,linux,amd64
+package loggertypes
 
-package fips
+// TargetType indicates type of the target e.g. console, http, kafka
+type TargetType uint8
 
-import _ "crypto/tls/fipsonly"
+//go:generate stringer -type=TargetType -trimprefix=Target $GOFILE
 
-const enabled = true
+// Constants for target types
+const (
+	_ TargetType = iota
+	TargetConsole
+	TargetHTTP
+	TargetKafka
+)
+
+// TargetStats contains statistics for a target.
+type TargetStats struct {
+	// QueueLength is the queue length if any messages are queued.
+	QueueLength int
+
+	// TotalMessages is the total number of messages sent in the lifetime of the target
+	TotalMessages int64
+
+	// FailedMessages should log message count that failed to send.
+	FailedMessages int64
+}

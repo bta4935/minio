@@ -6,7 +6,7 @@ MinIO stores all its config as part of the server deployment, config is erasure 
 
 ### Certificate Directory
 
-TLS certificates by default are expected to be stored under ``${HOME}/.minio/certs`` directory. You need to place certificates here to enable `HTTPS` based access. Read more about [How to secure access to MinIO server with TLS](https://min.io/docs/minio/linux/operations/network-encryption.html).
+TLS certificates by default are expected to be stored under ``${HOME}/.minio/certs`` directory. You need to place certificates here to enable `HTTPS` based access. Read more about [How to secure access to MinIO server with TLS](https://docs.min.io/community/minio-object-store/operations/network-encryption.html).
 
 Following is a sample directory structure for MinIO server with TLS certificates.
 
@@ -139,6 +139,7 @@ remote_transport_deadline       (duration)  set the deadline for API requests on
 list_quorum                     (string)    set the acceptable quorum expected for list operations e.g. "optimal", "reduced", "disk", "strict", "auto" (default: 'strict')
 replication_priority            (string)    set replication priority (default: 'auto')
 replication_max_workers         (number)    set the maximum number of replication workers (default: '500')
+replication_max_lrg_workers     (number)    set the maximum number of replication workers MinIO uses to replicate large objects between sites. (default: '10')
 transition_workers              (number)    set the number of transition workers (default: '100')
 stale_uploads_expiry            (duration)  set to expire stale multipart uploads older than this values (default: '24h')
 stale_uploads_cleanup_interval  (duration)  set to change intervals when stale multipart uploads are expired (default: '6h')
@@ -171,7 +172,7 @@ MINIO_API_OBJECT_MAX_VERSIONS             (number)    set max allowed number of 
 
 #### Notifications
 
-Notification targets supported by MinIO are in the following list. To configure individual targets please refer to more detailed documentation [here](https://min.io/docs/minio/linux/administration/monitoring.html#bucket-notifications).
+Notification targets supported by MinIO are in the following list. To configure individual targets please refer to more detailed documentation [here](https://docs.min.io/community/minio-object-store/administration/monitoring.html#bucket-notifications).
 
 ```
 notify_webhook        publish bucket notifications to webhook endpoints
@@ -335,5 +336,5 @@ minio server /data
 
 ## Explore Further
 
-* [MinIO Quickstart Guide](https://min.io/docs/minio/linux/index.html#quickstart-for-linux)
-* [Configure MinIO Server with TLS](https://min.io/docs/minio/linux/operations/network-encryption.html)
+* [MinIO Quickstart Guide](https://docs.min.io/community/minio-object-store/operations/deployments/baremetal-deploy-minio-on-redhat-linux.html)
+* [Configure MinIO Server with TLS](https://docs.min.io/community/minio-object-store/operations/network-encryption.html)

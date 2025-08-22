@@ -88,6 +88,8 @@ func toStorageErr(err error) error {
 	}
 
 	switch err.Error() {
+	case errUploadIDNotFound.Error():
+		return errUploadIDNotFound
 	case errFaultyDisk.Error():
 		return errFaultyDisk
 	case errFaultyRemoteDisk.Error():
@@ -760,7 +762,7 @@ func (client *storageRESTClient) DeleteVersions(ctx context.Context, volume stri
 }
 
 // RenamePart - renames multipart part file
-func (client *storageRESTClient) RenamePart(ctx context.Context, srcVolume, srcPath, dstVolume, dstPath string, meta []byte) (err error) {
+func (client *storageRESTClient) RenamePart(ctx context.Context, srcVolume, srcPath, dstVolume, dstPath string, meta []byte, skipParent string) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, globalDriveConfig.GetMaxTimeout())
 	defer cancel()
 
@@ -771,6 +773,7 @@ func (client *storageRESTClient) RenamePart(ctx context.Context, srcVolume, srcP
 		DstVolume:   dstVolume,
 		DstFilePath: dstPath,
 		Meta:        meta,
+		SkipParent:  skipParent,
 	})
 	return toStorageErr(err)
 }

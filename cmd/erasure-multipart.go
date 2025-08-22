@@ -527,7 +527,7 @@ func (er erasureObjects) NewMultipartUpload(ctx context.Context, bucket, object 
 }
 
 // renamePart - renames multipart part to its relevant location under uploadID.
-func (er erasureObjects) renamePart(ctx context.Context, disks []StorageAPI, srcBucket, srcEntry, dstBucket, dstEntry string, optsMeta []byte, writeQuorum int) ([]StorageAPI, error) {
+func (er erasureObjects) renamePart(ctx context.Context, disks []StorageAPI, srcBucket, srcEntry, dstBucket, dstEntry string, optsMeta []byte, writeQuorum int, skipParent string) ([]StorageAPI, error) {
 	paths := []string{
 		dstEntry,
 		dstEntry + ".meta",
@@ -545,7 +545,7 @@ func (er erasureObjects) renamePart(ctx context.Context, disks []StorageAPI, src
 			if disks[index] == nil {
 				return errDiskNotFound
 			}
-			return disks[index].RenamePart(ctx, srcBucket, srcEntry, dstBucket, dstEntry, optsMeta)
+			return disks[index].RenamePart(ctx, srcBucket, srcEntry, dstBucket, dstEntry, optsMeta, skipParent)
 		}, index)
 	}
 
@@ -754,8 +754,11 @@ func (er erasureObjects) PutObjectPart(ctx context.Context, bucket, object, uplo
 	ctx = rlkctx.Context()
 	defer uploadIDRLock.RUnlock(rlkctx)
 
-	onlineDisks, err = er.renamePart(ctx, onlineDisks, minioMetaTmpBucket, tmpPartPath, minioMetaMultipartBucket, partPath, partFI, writeQuorum)
+	onlineDisks, err = er.renamePart(ctx, onlineDisks, minioMetaTmpBucket, tmpPartPath, minioMetaMultipartBucket, partPath, partFI, writeQuorum, uploadIDPath)
 	if err != nil {
+		if errors.Is(err, errUploadIDNotFound) {
+			return pi, toObjectErr(errUploadIDNotFound, bucket, object, uploadID)
+		}
 		if errors.Is(err, errFileNotFound) {
 			// An in-quorum errFileNotFound means that client stream
 			// prematurely closed and we do not find any xl.meta or
@@ -1478,7 +1481,7 @@ func (er erasureObjects) CompleteMultipartUpload(ctx context.Context, bucket str
 		}
 	}
 
-	for i := 0; i < len(onlineDisks); i++ {
+	for i := range len(onlineDisks) {
 		if onlineDisks[i] != nil && onlineDisks[i].IsOnline() {
 			// Object info is the same in all disks, so we can pick
 			// the first meta from online disk
@@ -1506,17 +1509,10 @@ func (er erasureObjects) AbortMultipartUpload(ctx context.Context, bucket, objec
 		auditObjectErasureSet(ctx, "AbortMultipartUpload", object, &er)
 	}
 
-	// Validates if upload ID exists.
-	if _, _, err = er.checkUploadIDExists(ctx, bucket, object, uploadID, false); err != nil {
-		if errors.Is(err, errVolumeNotFound) {
-			return toObjectErr(err, bucket)
-		}
-		return toObjectErr(err, bucket, object, uploadID)
-	}
-
 	// Cleanup all uploaded parts.
-	er.deleteAll(ctx, minioMetaMultipartBucket, er.getUploadIDDir(bucket, object, uploadID))
+	defer er.deleteAll(ctx, minioMetaMultipartBucket, er.getUploadIDDir(bucket, object, uploadID))
 
-	// Successfully purged.
-	return nil
+	// Validates if upload ID exists.
+	_, _, err = er.checkUploadIDExists(ctx, bucket, object, uploadID, false)
+	return toObjectErr(err, bucket, object, uploadID)
 }
