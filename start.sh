@@ -1,12 +1,12 @@
 #!/bin/sh
 
-# Use simpler configuration for Render
+# Enable MinIO web browser
 export MINIO_BROWSER=on
 
 # Print connection info for debugging
 echo "Current PORT: $PORT"
-echo "MINIO_SERVER_URL: $MINIO_SERVER_URL"
+echo "Console PORT: $CONSOLE_PORT"
+echo "MINIO_ROOT_USER: $MINIO_ROOT_USER"
 
-# Run MinIO with just the bare minimum options
-# Use the port that Render expects and let MinIO figure out the rest
-exec minio server --address ":$PORT" /data
+# Run MinIO server binding API and Console to all interfaces on specified ports
+exec minio server /data --address "0.0.0.0:$PORT" --console-address "0.0.0.0:$CONSOLE_PORT"
