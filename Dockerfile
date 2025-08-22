@@ -8,15 +8,17 @@ ENV MINIO_BROWSER=on
 # Create data directory
 RUN mkdir -p /data
 
-# This allows the container to use the PORT provided by Render
+# Use environment variable PORT provided by Render (default 9000)
 ENV PORT=9000
+ENV CONSOLE_PORT=9090
 
-# We'll use an entrypoint script to handle the port substitution
+# Copy entrypoint script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose the port (Render will map this to its assigned port)
+# Expose the API and Console ports
 EXPOSE 9000
+EXPOSE 9090
 
 # Use the entrypoint script
 ENTRYPOINT ["/start.sh"]
